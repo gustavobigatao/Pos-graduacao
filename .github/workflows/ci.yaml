@@ -49,3 +49,53 @@ jobs:
       - name: Stop Environment
         if: always()
         run: make down
+
+  validate-manifests:
+    name: Validate Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.14.0'
+
+      - name: Helm Lint
+        run: helm lint helm/cnpj-pipeline
+
+      - name: Template Helm Chart
+        run: helm template cnpj-pipeline helm/cnpj-pipeline > /dev/null
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Validate Kubernetes manifests
+        run: |
+          for f in k8s/*.yaml; do
+            if [ -f "$f" ]; then
+              kubectl apply --dry-run=client -f "$f"
+            fi
+          done
+
+  build:
+    name: Build Container Image
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, validate-manifests]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ContainerFile
+          push: false
+          tags: fastapi-cnpj:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
