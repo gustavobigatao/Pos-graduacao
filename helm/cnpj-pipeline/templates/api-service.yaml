@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cnpj-pipeline.fullname" . }}-api
+  labels:
+    {{- include "cnpj-pipeline.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "cnpj-pipeline.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: api

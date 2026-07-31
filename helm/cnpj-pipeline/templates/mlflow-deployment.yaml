@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cnpj-pipeline.fullname" . }}-mlflow
+  labels:
+    {{- include "cnpj-pipeline.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mlflow
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "cnpj-pipeline.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mlflow
+  template:
+    metadata:
+      labels:
+        {{- include "cnpj-pipeline.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mlflow
+    spec:
+      containers:
+        - name: mlflow
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "sqlite:///app/mlflow.db", "--default-artifact-root", "/app/mlartifacts"]
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+          volumeMounts:
+            - name: mlflow-data
+              mountPath: /app/mlartifacts
+      volumes:
+        - name: mlflow-data
+          emptyDir: {}

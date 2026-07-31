@@ -1,0 +1,13 @@
+apiVersion: v2
+name: cnpj-pipeline
+description: Pipeline de dados CNPJ da Receita Federal
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - cnpj
+  - pipeline
+  - data-engineering
+  - receita-federal
+maintainers:
+  - name: Data Engineering Team

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cnpj-pipeline.fullname" . }}-config
+  labels:
+    {{- include "cnpj-pipeline.labels" . | nindent 4 }}
+data:
+  ENV: "production"
+  DATABASE_URL: "postgresql://postgres:{{ .Values.postgresql.auth.postgresPassword }}@{{ .Release.Name }}-postgresql:5432/{{ .Values.postgresql.auth.database }}"
+  S3_ENDPOINT_URL: "http://{{ .Release.Name }}-storage:{{ .Values.storage.port }}"
+  MLFLOW_TRACKING_URI: "http://{{ .Release.Name }}-mlflow:{{ .Values.mlflow.port }}"

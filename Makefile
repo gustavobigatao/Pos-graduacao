@@ -1,4 +1,4 @@
-.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3 ml-train mlflow-ui drift-report dagster-ui dagster-run
+.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3 ml-train mlflow-ui drift-report helm-lint helm-deploy dagster-ui dagster-run
 .DEFAULT_GOAL := help
 
 # Detecta se podman está disponível, caso contrário usa docker (útil para CI)
@@ -138,5 +138,13 @@ dagster-run: ## Roda um pipeline via Dagster
 	@curl -s -X POST "http://localhost:3001/graphql" \
 		-H "Content-Type: application/json" \
 		-d '{"query": "mutation { launchPipelineExecution(selector: {repositorySelector: {repositoryLocationName: \"__repository__\", repositoryName: \"__repository__\"}, pipelineName: \"cnpj_pipeline\"}, runConfigData: {}) { run { id } } }"}' | python3 -m json.tool
+
+# === Helm ===
+helm-lint: ## Verifica validade dos Helm charts
+	@echo "🔍 Verificando Helm charts..."
+	helm lint helm/cnpj-pipeline
+
+helm-deploy: ## Deploy via Helm (alias para kind-deploy)
+	@$(MAKE) kind-deploy
 
 

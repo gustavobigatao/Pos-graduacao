@@ -1,0 +1,67 @@
+replicaCount: 1
+
+image:
+  repository: fastapi-cnpj
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: cnpj-pipeline.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "postgres"
+    database: "cnpj"
+
+storage:
+  enabled: true
+  port: 3900
+
+metabase:
+  enabled: true
+  port: 3000
+
+dagster:
+  enabled: true
+  webserverPort: 3001
+  daemonEnabled: true
+
+mlflow:
+  enabled: true
+  port: 5000
+
+drift:
+  enabled: true
+  schedule: "0 6 * * 1"
