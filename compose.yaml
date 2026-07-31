@@ -81,6 +81,40 @@ services:
       retries: 5
       start_period: 60s
 
+  dagster-webserver:
+    build:
+      context: .
+      dockerfile: ContainerFile
+    image: fastapi-cnpj:latest
+    container_name: fastapi_cnpj_dagster
+    command: >
+      bash -c "dagster-webserver -h 0.0.0.0 -p 3001 -w /app/dagster.yaml"
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  dagster-daemon:
+    build:
+      context: .
+      dockerfile: ContainerFile
+    image: fastapi-cnpj:latest
+    container_name: fastapi_cnpj_dagster_daemon
+    command: >
+      bash -c "dagster-daemon run -w /app/dagster.yaml"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
   mlflow:
     build:
       context: .

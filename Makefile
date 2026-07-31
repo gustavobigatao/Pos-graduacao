@@ -1,4 +1,4 @@
-.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3 ml-train mlflow-ui drift-report
+.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3 ml-train mlflow-ui drift-report dagster-ui dagster-run
 .DEFAULT_GOAL := help
 
 # Detecta se podman está disponível, caso contrário usa docker (útil para CI)
@@ -127,5 +127,16 @@ mlflow-ui: ## Abre MLflow UI no navegador
 drift-report: ## Gera relatório de data drift (ex: make drift-report MONTH=2026-04)
 	@echo "📈 Gerando relatório de drift para $(MONTH)..."
 	$(COMPOSE_CMD) exec api python -m src.ml.drift --year-month $(MONTH)
+
+# === Dagster ===
+dagster-ui: ## Abre Dagster Webserver no navegador
+	@echo "🔄 Dagster UI disponível em: http://localhost:3001"
+	@echo "Execute 'make up' primeiro para subir o serviço"
+
+dagster-run: ## Roda um pipeline via Dagster
+	@echo "🔄 Executando pipeline via Dagster..."
+	@curl -s -X POST "http://localhost:3001/graphql" \
+		-H "Content-Type: application/json" \
+		-d '{"query": "mutation { launchPipelineExecution(selector: {repositorySelector: {repositoryLocationName: \"__repository__\", repositoryName: \"__repository__\"}, pipelineName: \"cnpj_pipeline\"}, runConfigData: {}) { run { id } } }"}' | python3 -m json.tool
 
 
