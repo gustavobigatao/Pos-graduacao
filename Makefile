@@ -1,4 +1,4 @@
-.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3 ml-train mlflow-ui drift-report helm-lint helm-deploy dagster-ui dagster-run
+.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3 ml-train mlflow-ui drift-report kind-create kind-deploy kind-status kind-rollback kind-delete helm-lint helm-deploy dagster-ui dagster-run
 .DEFAULT_GOAL := help
 
 # Detecta se podman está disponível, caso contrário usa docker (útil para CI)
@@ -138,6 +138,28 @@ dagster-run: ## Roda um pipeline via Dagster
 	@curl -s -X POST "http://localhost:3001/graphql" \
 		-H "Content-Type: application/json" \
 		-d '{"query": "mutation { launchPipelineExecution(selector: {repositorySelector: {repositoryLocationName: \"__repository__\", repositoryName: \"__repository__\"}, pipelineName: \"cnpj_pipeline\"}, runConfigData: {}) { run { id } } }"}' | python3 -m json.tool
+
+# === Kind / Kubernetes ===
+kind-create: ## Cria cluster Kind para deploy local
+	@echo "🔧 Criando Kind cluster..."
+	bash scripts/setup-kind.sh
+
+kind-deploy: ## Faz deploy com Helm no Kind
+	@echo "🚀 Fazendo deploy com Helm..."
+	bash scripts/deploy-kind.sh
+
+kind-status: ## Mostra status do deploy no Kind
+	@echo "📊 Status do deploy:"
+	kubectl get pods -n cnpj-pipeline
+	kubectl get svc -n cnpj-pipeline
+
+kind-rollback: ## Faz rollback do deploy no Kind (ex: make kind-rollback REVISION=1)
+	@echo "⏪ Fazendo rollback para revisão $(REVISION)..."
+	helm rollback cnpj-pipeline $(REVISION) -n cnpj-pipeline
+
+kind-delete: ## Deleta o cluster Kind
+	@echo "🗑️ Deletando Kind cluster..."
+	kind delete cluster --name cnpj-pipeline
 
 # === Helm ===
 helm-lint: ## Verifica validade dos Helm charts
