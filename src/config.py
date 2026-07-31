@@ -30,3 +30,6 @@ DATA_PROCESSED_DIR = os.getenv("DATA_PROCESSED_DIR", "data/processed")
 
 # === Aplicação ===
 ENV = os.getenv("ENV", "development")
+
+# === MLflow ===
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")

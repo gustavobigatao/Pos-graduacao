@@ -81,8 +81,25 @@ services:
       retries: 5
       start_period: 60s
 
+  mlflow:
+    build:
+      context: .
+      dockerfile: ContainerFile
+    image: fastapi-cnpj:latest
+    container_name: fastapi_cnpj_mlflow
+    command: >
+      bash -c "mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///app/mlflow.db --default-artifact-root /app/mlartifacts"
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - mlflow-data:/app/mlartifacts
+
 volumes:
   postgres-data:
   garage-data:
   garage-meta:
   metabase-data:
+  mlflow-data:

@@ -1,4 +1,4 @@
-.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3
+.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3 ml-train mlflow-ui
 .DEFAULT_GOAL := help
 
 # Detecta se podman está disponível, caso contrário usa docker (útil para CI)
@@ -113,5 +113,14 @@ explore: ## Explora dados raw sem modificá-los (ex: make explore MONTH=2026-04)
 
 logs: ## Mostra logs em tempo real
 	$(COMPOSE_CMD) logs -f
+
+# === MLflow ===
+ml-train: ## Treina modelo de classificação com MLflow tracking
+	@echo "🤖 Treinando modelo com MLflow tracking..."
+	$(COMPOSE_CMD) exec api python -m src.ml.train $(if $(MONTH),--year-month $(MONTH),)
+
+mlflow-ui: ## Abre MLflow UI no navegador
+	@echo "📊 MLflow UI disponível em: http://localhost:5000"
+	@echo "Execute 'make up' primeiro para subir o serviço"
 
 

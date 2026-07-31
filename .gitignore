@@ -33,6 +33,10 @@ data/raw/*.csv
 data/processed/*.parquet
 *.sqlite
 
+# MLflow
+mlflow.db
+mlartifacts/
+
 # IDEs
 .vscode/
 .idea/
