@@ -33,3 +33,6 @@ ENV = os.getenv("ENV", "development")
 
 # === MLflow ===
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+
+# === Data Drift ===
+DRIFT_REPORT_DIR = os.getenv("DRIFT_REPORT_DIR", "reports/drift")

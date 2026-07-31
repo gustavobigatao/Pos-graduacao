@@ -1,4 +1,4 @@
-.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3 ml-train mlflow-ui
+.PHONY: help build up down test clean clean-volumes explore discover sync ingest logs lint format s3-status s3-list verify sync-file transform transform-file transform-status load-db load-db-file load-db-status load-s3 ml-train mlflow-ui drift-report
 .DEFAULT_GOAL := help
 
 # Detecta se podman está disponível, caso contrário usa docker (útil para CI)
@@ -122,5 +122,10 @@ ml-train: ## Treina modelo de classificação com MLflow tracking
 mlflow-ui: ## Abre MLflow UI no navegador
 	@echo "📊 MLflow UI disponível em: http://localhost:5000"
 	@echo "Execute 'make up' primeiro para subir o serviço"
+
+# === Data Drift ===
+drift-report: ## Gera relatório de data drift (ex: make drift-report MONTH=2026-04)
+	@echo "📈 Gerando relatório de drift para $(MONTH)..."
+	$(COMPOSE_CMD) exec api python -m src.ml.drift --year-month $(MONTH)
 
 

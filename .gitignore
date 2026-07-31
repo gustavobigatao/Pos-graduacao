@@ -37,6 +37,9 @@ data/processed/*.parquet
 mlflow.db
 mlartifacts/
 
+# Data Drift Reports
+reports/drift/
+
 # IDEs
 .vscode/
 .idea/
