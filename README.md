@@ -4,13 +4,15 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.137.0.svg?logo=fastapi)
 ![Docker](https://img.shields.io/badge/Podman-ready-blue?logo=podman)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
-<!-- TODO: Pesquise sobre https://shields.io/ e aprenda a usar badges reais. Eles ajudam a comunicar o status, versão e qualidade do seu projeto de forma profissional! -->
+![MLflow](https://img.shields.io/badge/MLflow-2.18.0-blue.svg)
+![Dagster](https://img.shields.io/badge/Dagster-1.9.0-blue.svg)
+![Helm](https://img.shields.io/badge/Helm-3.14.0-blue.svg)
 
 > [!NOTE]
 > Este repositório utiliza ferramentas de Inteligência Artificial para apoiar seu desenvolvimento. Durante as aulas para fins educativos, testamos as habilidades de "Vibe Code" e exploramos a preparação do repositório orientada a **Spec Driven Development**.
 
 Repositório base para o curso de **DevOps e MLOps Aplicado a Engenharia de Dados**.
-Pipeline completo de dados públicos de CNPJ da Receita Federal — da ingestão ao analytics.
+Pipeline completo de dados públicos de CNPJ da Receita Federal — da ingestão ao analytics com ML.
 
 ---
 
@@ -54,6 +56,15 @@ Criar um pipeline de dados completo e robusto que:
                          ┌────────▼──────────────┐
                          │  Metabase (:3000)      │
                          │  FastAPI  (:8000/docs) │
+                         │  Dagster  (:3001)      │
+                         │  MLflow   (:5000)      │
+                         └────────────────────────┘
+                                  │
+                         ┌────────▼──────────────┐
+                         │  ML Pipeline           │
+                         │  ├── Training (MLflow) │
+                         │  ├── Drift (Evidently) │
+                         │  └── Model Registry    │
                          └────────────────────────┘
 ```
 
@@ -62,16 +73,23 @@ Criar um pipeline de dados completo e robusto que:
 ## 🏗️ Estrutura do Repositório
 
 ```text
-├── .github/workflows/     # 🔜 CI/CD GitHub Actions (Lab 2.1)
+├── .github/workflows/     # CI/CD GitHub Actions
 ├── ContainerFile          # Multi-stage build + usuário rootless (appuser)
 ├── Makefile               # Targets para todo o pipeline
-├── compose.yaml           # API, PostgreSQL, Garage S3, Metabase
+├── compose.yaml           # API, PostgreSQL, Garage, Dagster, MLflow
 ├── config/garage.toml     # Configuração do Garage S3
 ├── docs/adr/              # Decisões de Arquitetura (ADRs)
-├── k8s/                   # 🔜 Kubernetes Manifests (Lab 2.3)
+├── helm/                  # Helm charts para Kubernetes
+│   └── cnpj-pipeline/
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       └── templates/
+├── k8s/                   # Kubernetes Manifests
 ├── scripts/
 │   ├── explore_raw.py     # Exploração de dados raw sem modificar
-│   └── init_garage.sh     # Setup manual do Garage (se necessário)
+│   ├── init_garage.sh     # Setup manual do Garage (se necessário)
+│   ├── setup-kind.sh      # Setup do Kind cluster
+│   └── deploy-kind.sh     # Deploy via Helm no Kind
 ├── src/
 │   ├── config.py          # Configurações via variáveis de ambiente (12-Factor)
 │   ├── exceptions.py      # Exceções customizadas
@@ -84,11 +102,17 @@ Criar um pipeline de dados completo e robusto que:
 │   │   ├── transform.py   # CSV → Parquet (chunked, com regras de negócio)
 │   │   ├── load_db.py     # Parquet → PostgreSQL via psycopg2 COPY
 │   │   └── load_s3.py     # Upload para Garage S3 (raw + processed)
+│   ├── ml/                # Machine Learning
+│   │   ├── train.py       # Treino de modelo com MLflow tracking
+│   │   └── drift.py       # Detecção de data drift com Evidently
 │   ├── models/            # SQLAlchemy
 │   │   ├── database.py    # Engine, Session, Base
 │   │   ├── empresa.py     # Model Empresas
 │   │   ├── schema_cnpj.py # Models: Estabelecimentos, Sócios, Simples, Lookups
 │   │   └── sync_control.py# Controle de sincronização (estado do pipeline)
+│   ├── orchestration/     # Dagster
+│   │   ├── definitions.py # Assets e schedules do Dagster
+│   │   └── resources.py   # Resources do Dagster
 │   └── routers/           # Endpoints HTTP
 │       ├── admin.py       # Dashboard, sync, transform, load-db, load-s3
 │       ├── empresas.py    # Consulta de empresas por CNPJ/razão social
@@ -110,14 +134,20 @@ Criar um pipeline de dados completo e robusto que:
 - [x] **Bônus**: ADRs, discovery inteligente da RF, Admin Dashboard via API, hash SHA-256, Metabase.
 
 ### Aula 2: CI/CD e Data Quality
-- [ ] **Lab 2.1**: Pipelines CI/CD com GitHub Actions (linting, testes, build).
+- [x] **Lab 2.1**: Pipelines CI/CD com GitHub Actions (linting, testes, build, validação de manifests).
 - [ ] **Lab 2.2**: Data Quality com Soda Core integrado ao pipeline.
-- [ ] **Lab 2.3**: Deploy em Kubernetes local via Kind.
+- [x] **Lab 2.3**: Deploy em Kubernetes local via Kind com Helm charts.
 
 ### Aula 3: MLOps
-- [ ] **Lab 3.1**: Ambiente MLflow via compose para tracking de experimentos.
+- [x] **Lab 3.1**: MLflow para tracking de experimentos.
 - [ ] **Lab 3.2**: DVC para versionamento de dados integrado ao Garage S3.
 - [ ] **Lab 3.3**: Model Serving conteinerizado como API REST.
+
+### Bônus Implementados
+- [x] **Orquestração**: Dagster para gerenciamento de pipeline
+- [x] **Data Drift**: Monitoramento com Evidently AI
+- [x] **Helm Charts**: Deploy via Kubernetes com Helm
+- [x] **CI/CD Avançado**: Validação de manifests, lint de Helm, build de imagem
 
 ---
 
@@ -131,7 +161,7 @@ Criar um pipeline de dados completo e robusto que:
 ### Pipeline Completo
 
 ```bash
-# 1. Subir todos os serviços
+# 1. Subir todos os serviços (incluindo Dagster e MLflow)
 make up
 
 # 2. Descobrir dados disponíveis na Receita Federal
@@ -148,6 +178,48 @@ make load-db MONTH=2026-04
 
 # 6. Upload para Garage S3 (raw + processed)
 make load-s3 MONTH=2026-04
+```
+
+### ML Pipeline
+
+```bash
+# Treinar modelo com MLflow tracking
+make ml-train
+
+# Treinar para um período específico
+make ml-train MONTH=2026-04
+
+# Gerar relatório de data drift
+make drift-report MONTH=2026-04
+```
+
+### Orquestração com Dagster
+
+```bash
+# Acessar Dagster Webserver
+# http://localhost:3001
+
+# Executar pipeline via Dagster
+make dagster-run
+```
+
+### Deploy com Kubernetes
+
+```bash
+# Configurar Kind cluster
+make kind-create
+
+# Deploy com Helm
+make kind-deploy
+
+# Verificar status
+make kind-status
+
+# Rollback (se necessário)
+make kind-rollback REVISION=1
+
+# Limpar
+make kind-delete
 ```
 
 ### Monitoramento
@@ -172,6 +244,8 @@ make verify MONTH=2026-04
 |---|---|
 | **API (Swagger UI)** | http://localhost:8000/docs |
 | **Metabase** | http://localhost:3000 |
+| **Dagster** | http://localhost:3001 |
+| **MLflow** | http://localhost:5000 |
 | **PostgreSQL** | `localhost:5432` (user: postgres, db: cnpj) |
 | **Garage S3** | `localhost:3900` |
 
@@ -203,6 +277,24 @@ Consulte os ADRs em `docs/adr/`:
 - [ADR 0001](docs/adr/0001-usar-podman-em-vez-de-docker.md) — Podman em vez de Docker
 - [ADR 0002](docs/adr/0002-estrutura-api-e-jobs-batch.md) — Estrutura API + Jobs batch
 - [ADR 0003](docs/adr/0003-garage-como-object-storage.md) — Garage como Object Storage
+- [ADR 0004](docs/adr/0004-mlflow-experiment-tracking.md) — MLflow para experiment tracking
+- [ADR 0005](docs/adr/0005-evidently-data-drift.md) — Evidently AI para data drift
+- [ADR 0006](docs/adr/0006-dagster-orchestrator.md) — Dagster como orquestrador
+
+---
+
+## 🤖 Machine Learning
+
+### MLflow Tracking
+- Acesse: http://localhost:5000
+- Experiments: `cnpj-classification`
+- Metrics: accuracy, precision, recall, f1-score
+- Artifacts: modelos treinados
+
+### Data Drift
+- Relatórios HTML gerados em `reports/drift/`
+- Detecção automática de mudanças na distribuição
+- Métricas de qualidade dos dados
 
 ---
 
