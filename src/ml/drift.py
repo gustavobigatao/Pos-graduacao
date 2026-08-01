@@ -8,8 +8,9 @@ import logging
 import os
 
 import pandas as pd
-from evidently.report import Report
-from evidently.metric_preset import DataDriftPreset, DataQualityPreset
+from evidently.legacy.report import Report
+from evidently.legacy.metric_preset import DataDriftPreset, DataQualityPreset
+from sqlalchemy import create_engine
 
 from src.config import DATABASE_URL, DRIFT_REPORT_DIR
 
@@ -19,8 +20,6 @@ logger = logging.getLogger(__name__)
 
 def load_reference_data() -> pd.DataFrame:
     """Carrega dados de referência (base)."""
-    from sqlalchemy import create_engine
-
     engine = create_engine(DATABASE_URL)
     query = """
         SELECT 
@@ -39,8 +38,6 @@ def load_reference_data() -> pd.DataFrame:
 
 def load_current_data(year_month: str) -> pd.DataFrame:
     """Carrega dados atuais para comparação."""
-    from sqlalchemy import create_engine
-
     engine = create_engine(DATABASE_URL)
     query = """
         SELECT 

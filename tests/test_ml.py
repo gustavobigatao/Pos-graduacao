@@ -24,8 +24,17 @@ def test_prepare_features():
 
 
 def test_prepare_features_empty():
-    """Testa preparação com dataframe vazio."""
-    df = pd.DataFrame()
+    """Testa preparação com dataframe vazio (mas com as colunas esperadas)."""
+    df = pd.DataFrame(
+        columns=[
+            "razao_social",
+            "capital_social",
+            "natureza_juridica",
+            "qualificacao_socio",
+            "porte_empresa",
+            "cnae_fiscal_principal",
+        ]
+    )
 
     features = prepare_features(df)
 

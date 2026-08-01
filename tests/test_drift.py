@@ -8,7 +8,7 @@ def test_load_reference_data():
     with patch("src.ml.drift.create_engine") as mock_engine:
         mock_engine.return_value = MagicMock()
 
-        with patch("pd.read_sql") as mock_read:
+        with patch("src.ml.drift.pd.read_sql") as mock_read:
             mock_read.return_value = pd.DataFrame(
                 {
                     "razao_social": ["EMPRESA A", "EMPRESA B"],
@@ -27,7 +27,7 @@ def test_load_current_data():
     with patch("src.ml.drift.create_engine") as mock_engine:
         mock_engine.return_value = MagicMock()
 
-        with patch("pd.read_sql") as mock_read:
+        with patch("src.ml.drift.pd.read_sql") as mock_read:
             mock_read.return_value = pd.DataFrame(
                 {
                     "razao_social": ["EMPRESA A", "EMPRESA B", "EMPRESA C"],
