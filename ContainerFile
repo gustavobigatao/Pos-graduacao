@@ -3,6 +3,10 @@ FROM public.ecr.aws/docker/library/python:3.14-alpine AS builder
 
 WORKDIR /build
 
+# Ferramentas de build (gcc/g++/make) necessárias para compilar scikit-learn,
+# que ainda não publica wheels musllinux para Python 3.14.
+RUN apk add --no-cache build-base
+
 COPY requirements.txt .
 
 RUN python -m venv /opt/venv && \
@@ -14,6 +18,9 @@ FROM public.ecr.aws/docker/library/python:3.14-alpine
 
 # Criar usuário não-root para segurança
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# libgomp/libstdc++: runtimes C/C++ (OpenMP e stdlib) usados pelo scikit-learn compilado no estágio anterior
+RUN apk add --no-cache libgomp libstdc++
 
 # Variáveis de ambiente para execução otimizada
 ENV PYTHONDONTWRITEBYTECODE=1 \

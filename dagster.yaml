@@ -1,3 +1,0 @@
-loadable_target_origin:
-  module_name: src.orchestration.definitions
-  attribute: defs

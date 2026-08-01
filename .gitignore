@@ -40,6 +40,9 @@ mlartifacts/
 # Data Drift Reports
 reports/drift/
 
+# Dagster
+dagster_home/
+
 # IDEs
 .vscode/
 .idea/
